@@ -30,3 +30,13 @@
 ## CSR vs SSR
 - CSR (Client Side Rendering)은 초기 웹 페이지가 로딩될 때 html에 아무 것도 없고 클라이언트가 js파일을 다 다운 받은 후 뜨기 때문에 초기 로딩 속도의 문제, SEO에 문제가 있음
 - SSR (Server Side Rendering)은 초기 웹 페이지가 로딩될 때 서버에서 보내주기 때문에 html에 모든 정보가 들어있어 SEO에 유리함. 또한 위에 use client를 넣어준다고 하더라도 모든 컴포넌트와 페이지들이 백엔드에서 랜더링되고 HTML로 변환됨
+
+### hydration
+- 단순 HTML을 React application으로 초기화하는 작업
+- JS를 로드하지 않은 단순 HTML을 먼저 받은 후 리액트를 initialize해서 JS에 적한 기능들을 수행하도록 함
+- JS를 disabled하면 화면에 단순 html만 보이고 인터랙티브한 활동들은 하지 못함
+
+### use client
+- SSR로 backend에서 모든 것이 render 되고, frontend에서 hydrate 및 interactive 됨을 의미.
+- use client를 쓰지 않은 곳들은 server component. 사용자가 다운로드받을 JS의 양이 적어짐을 의미.
+- server component 안에 client component를 갖는건 가능하지만 client component 안에 server component를 갖는건 불가. 왜냐하면 최상단에 use client가 쓰이게 되면 client component가 되는데 그 안에 use client를 쓰지 않은 component를 import 해도 client component 안에 있게 되는거기 때문에 어쩔 수 없이 hydrate 과정을 거치게 됨.
