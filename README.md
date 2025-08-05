@@ -40,3 +40,51 @@
 - SSR로 backend에서 모든 것이 render 되고, frontend에서 hydrate 및 interactive 됨을 의미.
 - use client를 쓰지 않은 곳들은 server component. 사용자가 다운로드받을 JS의 양이 적어짐을 의미.
 - server component 안에 client component를 갖는건 가능하지만 client component 안에 server component를 갖는건 불가. 왜냐하면 최상단에 use client가 쓰이게 되면 client component가 되는데 그 안에 use client를 쓰지 않은 component를 import 해도 client component 안에 있게 되는거기 때문에 어쩔 수 없이 hydrate 과정을 거치게 됨.
+
+## layout.jsx(tsx)
+- nextjs는 layout 컴포넌트를 렌더링한 후 이동하려는 페이지를 URL을 통해 인식하여 layout 컴포넌트 안에 해당 페이지를 렌더링함.
+- layout.jsx(tsx)에 nav, footer, sidebar같은 모든 페이지에 들어가는 공통 컴포넌트를 넣으면 됨
+- layout 파일은 하나가 아닌 필요한 곳에서 여러개 생성 가능
+- a폴더에 layout 컴포넌트를 만들고 a/b/c/page.jsx(tsx)를 만들면 root에 있는 layout 컴포넌트와 a폴더에 있는 layout 컴포넌트가 중첩돼서 같이 나오게됨
+
+## metadata
+- 메타데이터는 title이나 description을 페이지마다 지정해줄 수 있음.
+- 페이지나 레이아웃만 메타데이터를 내보낼 수 있음.
+- 컴포넌트에서는 metadata를 내보낼 수 없고 metadata는 서버 컴포넌트에서만 있을 수 있음. client 컴포넌트에서는 있을 수 없음.
+- 꼭 문자열일 필요는 없음. 객체가 될 수 있음.
+- 메타데이터는 병합되는 성질을 가지고 있음. 이 성질을 가지고 반복되는 title을 페이지마다 계속 적어주는 것이 아닌 root 폴더에 있는 layout에서 metadata의 title의 템플릿을 지정하고 다른 파일의 메타데이터에서 쓸 수 있음
+```ts
+  export const metadata :Metadata = {
+    title : {
+      template: "%s | Next Movies",
+      default: "Next Movies"
+    },
+    description: 'The best movies on the best framework',
+  }
+
+  export const metadata = {
+    title: 'Home',
+  }
+```
+- %s 부분에 다른 파일의 메타데이터에 설정한 title 부분이 들어가고 메타데이터를 호출하지 않은 페이지 접속 시 default 값이 나옴
+- 꼭 metadata라는 이름으로 해야만 작동됨. (프레임워크 특성)
+- https://nextjs.org/docs/app/building-your-application/optimizing/metadata 
+
+## Route Group ((folderName))
+- (폴더명) 형식으로 app 폴더 아래에 디렉토리를 만들면, URL 경로에 해당 폴더명이 포함되지 않음.
+- 그룹마다 서로 다른 layout 파일 적용 가능. (레이아웃 분리)
+- URL 경로는 유지하면서 코드 폴더를 명확히 구분 가능 (폴더 정리)
+- 중첩 layout 또는 템플릿을 적용할 때 그룹 단위로 관리가 쉬움 (경로 재사용)
+- 팀/기능/섹션별로 라우팅 구조를 분리할 수 있음. (ex. auth, dashboard 등) (구조적 라우팅)
+
+## Dynamic Routes (동적 라우팅)
+- Static Routes (정적 라우팅)은 고정된 url을 갖지만 동적 라우팅은 url 마지막에 변수를 넣음으로써 여러 페이지를 볼 수 있음 (ex. 마이페이지, /mypage/hs , mypage/jhs)
+- 동적 라우팅을 사용하기 위해 url에 해당하는 폴더를 하나 만들고 그 하위에 [id] 폴더를 만들면 id가 변수가 됨.
+- params로 console을 찍어보면 terminal에서는 잘 뜨지만 브라우저에서는 console에서 아무것도 확인할 수 없는데 그 이유는 server component이기 때문이다. client component만 hydration하기 때문.
+- 동적 라우팅 사용 시 비동기 처리가 필요하기 때문에 async await 사용.
+- params와 searchparams를 props로 확인할 수 있는데, params.id는 [id]부분에 해당하는 값, searchparams는 [id]뒤에 ? 이후의 값 (ex. pages, region 등등)을 나타냄.
+```ts
+  export default async function MovieDetail({params : {id},} :      {params : {id : string};}){
+    return <h1>Movie {id}</h1>
+  }
+```
