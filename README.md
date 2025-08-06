@@ -88,3 +88,64 @@
     return <h1>Movie {id}</h1>
   }
 ```
+
+## Client Side Fetching API
+- fetch를 활용한 API 호출 후 데이터 받기
+- data를 fetch하려면 useEffect와 useState를 써야하는데 그럼 "use client"를 명시해줘야 하고 이 때문에 metadata를 쓰지 못하는 문제가 생김.
+```ts
+  "use client";
+
+  import { useEffect, useState } from "react";
+
+  // use client를 쓰면 metadata를 못씀
+
+  export default function Page(){
+    const [isLoading, setIsLoading] = useState(true);
+    const [movies, setMovies] = useState([]);
+    const getMovies = async() => {
+      const res = await fetch("https://nomad-movies.nomadcoders.workers.dev/movies");
+      const json = res.json();
+      setMovies(await json);
+      setIsLoading(false);
+    }
+    useEffect(() =>{
+      getMovies();
+    },[])
+    return (
+      <div>
+        {isLoading ? "Loading..." : JSON.stringify(movies)}
+      </div>
+    );
+  }
+```
+
+## Server Side Fetching API
+- getMovies라는 비동기식 함수를 만들어서 서버에서 데이터를 fetching할 수 있게 함.
+- Client에서 fetching을 했을 때는 Network 탭에서 api 주소를 확인할 수 있었지만, Server에서는 Network 탭에 아무 것도 뜨지 않음.
+- useState나 useEffect를 쓰지 않았기 때문에 use Client를 명시해주지 않아도 되고, 메타데이터도 사용 가능
+- 하지만 데이터 로딩이 오래 걸리기 때문에 데이터 로딩이 완료될 때까지 아무 것도 뜨지 않는다는 단점이 있음.
+```ts
+  export const metadata = {
+    title: "Home",
+  }
+
+  const URL = "https://nomad-movies.nomadcoders.workers.dev/movies"
+
+  async function getMovies(){
+    const res = await fetch(URL);
+    const json = await res.json();
+    return json;
+  }
+
+  export default async function HomePage(){
+    const movies = await getMovies();
+    return (
+      <div>
+        {JSON.stringify(movies)}
+      </div>
+    );
+  }
+```
+
+## loading.jsx(tsx)
+- 로딩 컴포넌트가 필요한 페이지와 같은 위치의 폴더에 loading.jsx(tsx)를 만들어주면 page에서 데이터가 로딩될 때까지 아무것도 안보여주는 것이 아닌 layout과 loading을 먼저 보여주고 데이터 로딩이 완료되면 페이지를 보여줌.

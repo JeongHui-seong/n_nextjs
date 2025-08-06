@@ -1,11 +1,20 @@
 export const metadata = {
-  title: 'Home',
+  title: "Home",
 }
 
-export default function Page(){
+const URL = "https://nomad-movies.nomadcoders.workers.dev/movies"
+
+async function getMovies(){
+  const res = await fetch(URL);
+  const json = await res.json();
+  return json;
+}
+
+export default async function HomePage(){
+  const movies = await getMovies();
   return (
     <div>
-      <h1>Hello!</h1>
+      {JSON.stringify(movies)}
     </div>
   );
 }
