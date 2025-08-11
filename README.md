@@ -149,3 +149,75 @@
 
 ## loading.jsx(tsx)
 - 로딩 컴포넌트가 필요한 페이지와 같은 위치의 폴더에 loading.jsx(tsx)를 만들어주면 page에서 데이터가 로딩될 때까지 아무것도 안보여주는 것이 아닌 layout과 loading을 먼저 보여주고 데이터 로딩이 완료되면 페이지를 보여줌.
+
+## force-cache
+- NextJS에서 한 번 들어갔던 페이지는 캐싱되기 때문에 로딩이 걸리지 않는데 14버전에서는 이 캐싱 기능이 가능한 것이 default 였음
+- 하지만 15버전에서 아무 옵션을 주지 않으면 리로드 시 계속 캐싱 기능이 작동하지 않음.
+- 따라서 캐싱이 필요하다면 force-cache를 옵션으로 부여해줘야함
+- https://nextjs.org/docs/app/api-reference/functions/fetch#optionscache
+
+## Parallel Requests
+- 여러 주소에서 데이터를 가져올 때 순차적으로 진행되기 때문에 시간이 오래 걸림
+- Promise.all()로 데이터 fetching을 병렬로 처리해 효율적으로 사용
+```ts
+  import { API_URL } from "../../../(home)/page";
+
+  async function getMovie(id:string) {
+    console.log(`Fetching movies : ${Date.now()}`);
+    const response = await fetch(`${API_URL}/${id}`);
+    return response.json();
+  }
+
+  async function getVideos(id:string){
+    console.log(`Fetching videos : ${Date.now()}`);
+    const response = await fetch(`${API_URL}/${id}/videos`);
+    return response.json();
+  }
+
+  export default async function MovieDetail({params : {id},} : {params : {id : string};}){
+    const [movie, videos] = await Promise.all([getMovie(id), getVideos(id)])
+    return <h1>{movie.title}</h1>
+  }
+```
+
+## Suspense
+- page.tsx안에서 모든 데이터를 병렬적으로 fetching하고 loading.tsx 페이지를 통해 로딩 ui를 구현했을 때 문제점이 두 가지 데이터가 모두 fetching되기 전까지 loading ui가 떠있음.
+- 모두 데이터가 fetching될 때까지 기다리지 않고 개별적으로 로딩하기 위해 각 fetch 함수를 component로 만들어 page에 개별로 import함.
+- 이 때 함수들은 async 처리 되어있기 때문에 await이 필요한 상황.
+- react에서 사용하던 <Suspense fallback={loading ui}> 를 사용하면 서로에게 영향을 끼치지 않고 데이터가 fetching되는 대로 따로 ui 구현
+- 페이지 단위 로딩 => loading.tsx / 서버 컴포넌트 단위 로딩 => Suspense
+```ts
+  // components/movie-videos.tsx
+  import { API_URL } from "../app/(home)/page";
+
+  async function getVideos(id:string){
+    console.log(`Fetching videos : ${Date.now()}`);
+    const response = await fetch(`${API_URL}/${id}/videos`);
+    return response.json();
+  }
+
+  export default async function MovieVideos({id} : {id:string}){
+    const videos = await getVideos(id);
+    return <h6>{JSON.stringify(videos)}</h6>
+  }
+
+  // movies.[id].page.tsx
+  import { Suspense } from "react";
+  import MovieInfo from "../../../../components/movie-info";
+  import MovieVideos from "../../../../components/movie-videos";
+
+  export default async function MovieDetail({params : {id},} : {params : {id : string};}){
+    return <div>
+      <Suspense fallback={<h1>Loading movie info</h1>}>
+        <MovieInfo id={id} />
+      </Suspense>
+      <Suspense fallback={<h1>Loading movie videos</h1>}>
+        <MovieVideos id={id} />
+      </Suspense>
+    </div>
+  }
+```
+
+## error.jsx(tsx)
+- error 파일을 사용하면 예기치 않은 런타임 오류를 처리하고 대체 UI를 표시할 수 있음.
+- "use client"를 명시해줘야만 error페이지 에러가 안남. 그 이유는 에러 UI에서 클라이언트 훅과 이벤트 핸들링(특히 reset())을 사용하기 위해서이며, Next.js에서는 기본적으로 서버 컴포넌트이기 때문에 명시적으로 클라이언트 컴포넌트로 전환해야함.
