@@ -221,3 +221,24 @@
 ## error.jsx(tsx)
 - error 파일을 사용하면 예기치 않은 런타임 오류를 처리하고 대체 UI를 표시할 수 있음.
 - "use client"를 명시해줘야만 error페이지 에러가 안남. 그 이유는 에러 UI에서 클라이언트 훅과 이벤트 핸들링(특히 reset())을 사용하기 위해서이며, Next.js에서는 기본적으로 서버 컴포넌트이기 때문에 명시적으로 클라이언트 컴포넌트로 전환해야함.
+
+## Dynamic Metadata
+- 정적인 페이지에선 metadata를 정적으로 사용해도 되지만, 동적 페이지에서 metadata를 정적으로 사용하고 싶을 수가 있음. 이 때 generateMetadata 함수 사용 가능.
+- page 파일에서 파라미터로 id를 받아오는 것처럼 generateMetadata도 파라미터로 id를 받아올 수 있음.
+- 프레임워크이기 때문에 export 필수!
+
+```ts
+  export async function generateMetadata({params : {id}} : {params : {id : string}}){
+    const movie = await getMovie(id); // api를 불러오는 함수를 export해 getMovie를 해당 페이지에서 import해옴
+    return {
+      title : movie.title,
+    };
+  }
+```
+
+## Vercel 배포
+- package.json에서 "scripts" 부분에 "build" : "next build" / "start" : "next start" 추가
+
+## prefetch
+- Link 태그에 prefetch라는 prop을 작성하면 백그라운드에서 페이지를 미리 로드해 해당 페이지를 빠르게 로딩할 수 있음
+- 스크롤하면서 해당 Link가 화면에 보이면 Network 탭을 통해 prefetch가 동작하는 것을 확인할 수 있음
